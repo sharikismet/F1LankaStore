@@ -57,7 +57,8 @@ export function AdminDashboard() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': publicAnonKey  // <--- ADD THIS EXACT LINE
         },
         body: JSON.stringify({
           ...formData,
