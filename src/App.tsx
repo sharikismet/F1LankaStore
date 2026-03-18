@@ -1,3 +1,4 @@
+import { AdminDashboard } from './components/AdminDashboard';
 import { useState, useMemo, useEffect } from 'react';
 import { Header } from './components/Header';
 import { ProductFilters } from './components/ProductFilters';
@@ -432,6 +433,19 @@ function AppContent() {
 }
 
 function App() {
+  // Check if the URL has #admin at the end
+  const isAdminRoute = window.location.hash === '#admin';
+
+  if (isAdminRoute) {
+    return (
+      <CartProvider>
+        <AdminDashboard />
+        <Toaster />
+      </CartProvider>
+    );
+  }
+
+  // Otherwise, render the normal store
   return (
     <CartProvider>
       <AppContent />
