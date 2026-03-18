@@ -45,30 +45,19 @@ export function AdminDashboard() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) toast.error(error.message);
-    else toast.success('Logged in successfully');
-    setLoading(false);
-  };
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleAddProduct = async (e: React.FormEvent) => {
+ const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!session) return toast.error('You must be logged in');
 
     setLoading(true);
     try {
-      const response = await fetch(`${supabaseUrl}/functions/v1/make-server-a97df12b/products`, {
+      // 1. We removed the extra "/server" from this URL to match your api.ts file
+      const url = `${supabaseUrl}/functions/v1/make-server-a97df12b/products`;
+      
+      console.log("Sending request to:", url);
+      console.log("Using token:", session.access_token.substring(0, 10) + "...");
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -84,16 +73,22 @@ export function AdminDashboard() {
 
       const result = await response.json();
 
-      if (!response.ok) throw new Error(result.error || 'Failed to add product');
+      if (!response.ok) {
+        // This will print the exact server error to your screen!
+        console.error("Server Error:", result);
+        throw new Error(`Server said: ${result.error || response.statusText}. Details: ${result.details || 'None'}`);
+      }
 
       toast.success('Product added successfully!');
-      // Reset form
+      
       setFormData({
         name: '', price: '', originalPrice: '', image: '', 
         category: 'T-Shirts', gender: 'all', team: '', description: '', stockQuantity: '10'
       });
     } catch (error: any) {
-      toast.error(error.message);
+      // Displays the detailed error message in the toast notification
+      toast.error(error.message, { duration: 6000 });
+      console.error('Full catch error:', error);
     } finally {
       setLoading(false);
     }
