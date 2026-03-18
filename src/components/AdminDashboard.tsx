@@ -6,10 +6,11 @@ import { Textarea } from './ui/textarea';
 import { toast } from 'sonner';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Initialize Supabase client directly from your app's config
+import { projectId, publicAnonKey } from '../utils/supabase/info';
+
+const supabaseUrl = `https://${projectId}.supabase.co`;
+const supabase = createClient(supabaseUrl, publicAnonKey);
 
 export function AdminDashboard() {
   const [session, setSession] = useState<any>(null);
