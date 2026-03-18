@@ -17,7 +17,6 @@ export function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   
   const [products, setProducts] = useState<any[]>([]);
-  // NEW: State to track if we are editing an existing product
   const [editingKey, setEditingKey] = useState<string | null>(null);
 
   const [email, setEmail] = useState('');
@@ -61,7 +60,6 @@ export function AdminDashboard() {
     }
   };
 
-  // NEW: Handle clicking the Edit button
   const handleEditClick = (p: any) => {
     const productData = typeof p.value === 'string' ? JSON.parse(p.value) : p.value;
     
@@ -78,10 +76,9 @@ export function AdminDashboard() {
     });
     
     setEditingKey(p.key);
-    window.scrollTo({ top: 0, behavior: 'smooth' }); // Scrolls up to the form!
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // NEW: Cancel an edit
   const handleCancelEdit = () => {
     setEditingKey(null);
     setFormData({
@@ -119,17 +116,11 @@ export function AdminDashboard() {
       };
 
       if (editingKey) {
-        // UPDATE EXISTING PRODUCT
-        const { error } = await supabase
-          .from('kv_store_a97df12b')
-          .update({ value: payload })
-          .eq('key', editingKey);
-
+        const { error } = await supabase.from('kv_store_a97df12b').update({ value: payload }).eq('key', editingKey);
         if (error) throw new Error(error.message);
         toast.success('Product updated successfully!');
-        setEditingKey(null); // Exit edit mode
+        setEditingKey(null);
       } else {
-        // CREATE NEW PRODUCT
         const { error } = await supabase.functions.invoke('make-server-a97df12b/products', {
           body: payload,
           method: 'POST',
@@ -138,7 +129,6 @@ export function AdminDashboard() {
         toast.success('Product added successfully!');
       }
 
-      // Reset form and refresh list
       setFormData({
         name: '', price: '', originalPrice: '', image: '', 
         category: 'T-Shirts', gender: 'all', team: '', description: '', stockQuantity: '10'
@@ -233,42 +223,47 @@ export function AdminDashboard() {
               const productData = typeof p.value === 'string' ? JSON.parse(p.value) : p.value;
               
               return (
-                // LAYOUT FIX: Added flex-wrap and min-w-0 to stop text from squishing buttons
-                <div key={p.key} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors gap-4">
+                // 🚨 BULLETPROOF LAYOUT FIX 🚨
+                <div key={p.key} className="flex flex-col md:flex-row gap-4 p-4 border rounded-lg bg-white shadow-sm items-start md:items-center">
                   
-                  <div className="flex items-center gap-4 flex-1 min-w-0 w-full">
+                  {/* Strict Image Box */}
+                  <div className="w-16 h-16 flex-shrink-0 bg-gray-100 rounded-md border overflow-hidden">
                     <img 
-                      src={productData.image || 'https://via.placeholder.com/50'} 
+                      src={productData.image || 'https://via.placeholder.com/64'} 
                       alt={productData.name} 
-                      className="w-16 h-16 object-cover rounded-md border flex-shrink-0"
+                      className="w-full h-full object-cover"
                     />
-                    <div className="flex-1 min-w-0">
-                      {/* LAYOUT FIX: Added 'truncate' to keep long titles on one line */}
-                      <h3 className="font-bold text-gray-900 truncate" title={productData.name}>
-                        {productData.name}
-                      </h3>
-                      <p className="text-sm text-gray-500">{productData.category} • ${productData.price}</p>
-                    </div>
                   </div>
                   
-                  {/* LAYOUT FIX: Grouped buttons together */}
-                  <div className="flex gap-2 w-full sm:w-auto">
+                  {/* Protected Text Area */}
+                  <div className="flex-grow w-full">
+                    <h3 className="font-bold text-gray-900 text-base mb-1 line-clamp-2">
+                      {productData.name}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {productData.category} • <span className="font-semibold text-gray-700">${productData.price}</span>
+                    </p>
+                  </div>
+                  
+                  {/* Fixed Width Button Container */}
+                  <div className="flex gap-2 w-full md:w-auto flex-shrink-0 mt-2 md:mt-0">
                     <Button 
                       type="button"
                       variant="outline" 
-                      className="flex-1 sm:flex-none"
+                      className="w-full md:w-24"
                       onClick={() => handleEditClick(p)}
                     >
                       Edit
                     </Button>
-                    <Button 
+                    
+                    {/* Replaced UI Button with strict HTML Button to force the red color */}
+                    <button 
                       type="button"
-                      variant="destructive" 
-                      className="flex-1 sm:flex-none bg-red-500 hover:bg-red-600 text-white"
+                      className="w-full md:w-24 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors shadow-sm"
                       onClick={() => handleDelete(p.key)}
                     >
                       Delete
-                    </Button>
+                    </button>
                   </div>
 
                 </div>
