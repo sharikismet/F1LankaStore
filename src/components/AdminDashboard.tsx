@@ -51,22 +51,40 @@ export function AdminDashboard() {
 
     setLoading(true);
     try {
-      const url = `${supabaseUrl}/functions/v1/make-server-a97df12b/products`;
-      
-      const response = await fetch(url, {
+      const payload = {
+        ...formData,
+        price: parseFloat(formData.price),
+        originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : undefined,
+        stockQuantity: parseInt(formData.stockQuantity)
+      };
+
+      // 🚨 GOODBYE FETCH! 🚨
+      // We use Supabase's built-in invoker. It automatically injects the 
+      // correct apikey and Bearer token perfectly every single time.
+      const { data, error } = await supabase.functions.invoke('make-server-a97df12b/products', {
+        body: payload,
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-          'apikey': publicAnonKey  // <--- ADD THIS EXACT LINE
-        },
-        body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price),
-          originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : undefined,
-          stockQuantity: parseInt(formData.stockQuantity)
-        })
       });
+
+      // If the edge function itself returns an error
+      if (error) {
+        console.error("Supabase Invoke Error:", error);
+        throw new Error(error.message || "Server rejected the request");
+      }
+
+      toast.success('Product added successfully!');
+      
+      setFormData({
+        name: '', price: '', originalPrice: '', image: '', 
+        category: 'T-Shirts', gender: 'all', team: '', description: '', stockQuantity: '10'
+      });
+    } catch (error: any) {
+      toast.error(`Failed: ${error.message}`, { duration: 10000 });
+      console.error('Full catch error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
       // READ AS RAW TEXT (Stops the blank error crash!)
       const responseText = await response.text();
