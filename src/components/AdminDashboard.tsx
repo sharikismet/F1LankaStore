@@ -39,12 +39,15 @@ export function AdminDashboard() {
     setLoading(false);
   };
 
-  const handleLogout = async () => await supabase.auth.signOut();
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // The 'async' keyword here is crucial! It prevents the Vercel build error.
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!session) return toast.error('You must be logged in');
@@ -58,15 +61,12 @@ export function AdminDashboard() {
         stockQuantity: parseInt(formData.stockQuantity)
       };
 
-      // 🚨 GOODBYE FETCH! 🚨
-      // We use Supabase's built-in invoker. It automatically injects the 
-      // correct apikey and Bearer token perfectly every single time.
+      // This Supabase invoke method automatically formats your headers and JWT perfectly
       const { data, error } = await supabase.functions.invoke('make-server-a97df12b/products', {
         body: payload,
         method: 'POST',
       });
 
-      // If the edge function itself returns an error
       if (error) {
         console.error("Supabase Invoke Error:", error);
         throw new Error(error.message || "Server rejected the request");
@@ -81,25 +81,6 @@ export function AdminDashboard() {
     } catch (error: any) {
       toast.error(`Failed: ${error.message}`, { duration: 10000 });
       console.error('Full catch error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-      // READ AS RAW TEXT (Stops the blank error crash!)
-      const responseText = await response.text();
-
-      if (!response.ok) {
-        throw new Error(`Status ${response.status}: ${responseText}`);
-      }
-
-      toast.success('Product added successfully!');
-      setFormData({
-        name: '', price: '', originalPrice: '', image: '', 
-        category: 'T-Shirts', gender: 'all', team: '', description: '', stockQuantity: '10'
-      });
-    } catch (error: any) {
-      toast.error(`Failed: ${error.message}`, { duration: 10000 });
     } finally {
       setLoading(false);
     }
